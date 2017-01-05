@@ -10,7 +10,7 @@
 #
 
 #
-### Build parameters
+### Build configuration parameters
 #
 ARCH ?= x86_64
 
@@ -27,21 +27,63 @@ BUILD_ROOT := $(SOURCE_ROOT)/build
 KERNEL := $(BUILD_ROOT)/kernel-$(ARCH).bin
 ISO := $(BUILD_ROOT)/os-$(ARCH).iso
 
-LINKER_SCRIPT := $(ARCH_LINKER_SCRIPT)
-GRUB_CFG := $(ARCH_GRUB_CFG)
-ASM_SOURCE_FILES := $(ARCH_ASM_SOURCE_FILES)
-ASM_OBJECT_FILES := $(patsubst $(ARCH_DIRECTORY)/%.asm, \
-	build/arch/$(ARCH)/%.o, $(assembly_source_files))
+LINKER_SCRIPT := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_LINKER_SCRIPT))
+GRUB_CFG := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_GRUB_CFG))
+ASM_SOURCE_FILES += $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_ASM_SOURCE_FILES))
+ASM_OBJECT_FILES += $(patsubst $(ARCH_DIRECTORY)/%.asm, build/arch/$(ARCH)/%.o, $(ASM_SOURCE_FILES))
 
-.PHONY: all clean run build
+#
+### Top-level targets
+# 
+.PHONY: default all build run clean
 
-all:
+default: all
 
+all: $(KERNEL)
+
+build: $(ISO)
 
 clean:
 	@rm -r $(BUILD_ROOT)
 
 
-run:
+run: $(ISO)
 	@qemu-system-x86_64 -s -cdrom $(ISO)
 
+#
+### Dry-run target.
+#
+# This would be what the build tool would output if it actually ran.
+#
+.PHONY: dry-run
+dry-run:
+	@echo "Configuration Info:"
+	@echo "==================================="
+	@echo "ARCH = $(ARCH)"
+	@echo "SOURCE_ROOT = $(SOURCE_ROOT)"
+	@echo "BUILD_ROOT = $(BUILD_ROOT)"
+	@echo "KERNEL = $(KERNEL)"
+	@echo "ISO = $(ISO)"
+	@echo "LINKER_SCRIPT = $(LINKER_SCRIPT)"
+	@echo "GRUB_CFG = $(GRUB_CFG)"
+	@echo "ASM_SOURCE_FILES = \"$(ASM_SOURCE_FILES)\""
+	@echo "ASM_OBJECT_FILES = \"$(ASM_OBJECT_FILES)\""
+	@echo "==================================="
+
+#
+### File pattern specific targets.
+#
+$(ISO): $(KERNEL) $(GRUB_CFG)
+	@mkdir -p $(BUILD_ROOT)/isofiles/boot/grub
+	@cp $(KERNEL) build/isofiles/boot/kernel.bin
+	@cp $(GRUB_CFG) build/isofiles/boot/grub
+	@grub-mkrescue -o $(ISO) build/isofiles 2> /dev/null
+	@rm -r build/isofiles
+
+$(KERNEL): $(ASM_OBJECT_FILES) $(LINKER_SCRIPT)
+	@echo $(ASM_OBJECT_FILES)
+	@ld -n -T $(LINKER_SCRIPT) -o $(KERNEL) $(ASM_OBJECT_FILES)
+
+build/arch/$(ARCH)/%.o: $(ARCH_DIRECTORY)/%.asm
+	@mkdir -p $(shell dirname $@)
+	@nasm -f elf64 $< -o $@

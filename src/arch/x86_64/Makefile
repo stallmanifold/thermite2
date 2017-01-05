@@ -9,11 +9,13 @@
 # except according to those terms.
 #
 
-ARCH_DIRECTORY += src/arch/x86_64
+ARCH_DIRECTORY        := src/arch/$(ARCH)
 
-ARCH_LINKER_SCRIPT    += x86_64/linker.ld
-ARCH_ASM_SOURCE_FILES += x86_64/multiboot_header.asm \
-			 x86_64/boot.asm
-ARCH_BOOTLOADER_CONFIG_DIR += x86_64/boot
+ARCH_LINKER_SCRIPT    += linker.ld
+
+ARCH_ASM_SOURCE_FILES += multiboot_header.asm \
+			 boot.asm
+
+ARCH_BOOTLOADER_CONFIG_DIR += boot
 
 ARCH_GRUB_CFG := $(ARCH_BOOTLOADER_CONFIG_DIR)/grub/grub.cfg
