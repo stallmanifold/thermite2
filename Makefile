@@ -27,6 +27,7 @@ BUILD_ROOT := $(SOURCE_ROOT)/build
 KERNEL := $(BUILD_ROOT)/kernel-$(ARCH).bin
 ISO := $(BUILD_ROOT)/os-$(ARCH).iso
 
+# Source code files
 LINKER_SCRIPT := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_LINKER_SCRIPT))
 GRUB_CFG := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_GRUB_CFG))
 ASM_SOURCE_FILES += $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_ASM_SOURCE_FILES))
