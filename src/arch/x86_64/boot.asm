@@ -1,12 +1,16 @@
+%define TRUE  1
+%define FALSE 0
+
 global start
 
 section .text
 bits 32
 start:
+    mov esp, stack_top
     call check_protected_mode
-    cmp eax, 0x01
+    cmp eax, TRUE
     je .ok
-    cmp eax, 0x00
+    cmp eax, FALSE
     je .not_ok
     jmp .error
 .ok:
@@ -28,10 +32,10 @@ check_protected_mode:
     and eax, 0x01
     cmp eax, 0x01
     jne .not_protected_mode
-    mov eax, 0x01
+    mov eax, TRUE
     ret
 .not_protected_mode:
-    mov eax, 0x00
+    mov eax, FALSE
     ret
 
 check_multiboot:
@@ -41,3 +45,18 @@ check_multiboot:
 .no_multiboot:
     mov al, "0"
     jmp error
+
+; Prints `ERR: ` and the given error code to screen and hangs.
+; parameter: error code (in ascii) in al
+error:
+    mov dword [0xb8000], 0x4f524f45
+    mov dword [0xb8004], 0x4f3a4f52
+    mov dword [0xb8008], 0x4f204f20
+    mov byte  [0xb800a], al
+    hlt
+
+section .bss
+align 4096
+stack_bottom:
+    resb 64
+stack_top:
