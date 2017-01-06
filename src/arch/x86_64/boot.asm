@@ -1,7 +1,13 @@
 %define TRUE  1
 %define FALSE 0
+%define VGA_BUFFER 0xb8000    ; VGA Buffer address.
 
 global start
+
+section .data
+str_ok:     db "In Protected Mode.", 0
+str_not_ok: db "Not In Protected Mode.", 0
+str_err:    db "An Error Occurred.", 0
 
 section .text
 bits 32
@@ -14,23 +20,23 @@ start:
     je .not_ok
     jmp .error
 .ok:
-    ; print `OK` to screen
-    mov dword [0xb8000], 0x2f4b2f4f
+    mov ebx, str_ok
+    call vga_print_string
     hlt
 .not_ok:
-    ; print `KO` to screen
-    mov dword [0xb8000], 0x2f4f2f4b
+    mov ebx, str_not_ok
+    call vga_print_string
     hlt
 .error:
-    ; print 'ER' to screen
-    mov dword [0xb8000], 0x2f522f45
+    mov ebx, str_err
+    call vga_print_string
     hlt
 
 ; Detect that the intel CPU is in protected mode. 
 check_protected_mode:
     mov eax, cr0
-    and eax, 0x01
-    cmp eax, 0x01
+    and eax, 0x01            ;
+    cmp eax, 0x01            ; Check That the PE mode flag is set in CR0.
     jne .not_protected_mode
     mov eax, TRUE
     ret
@@ -49,11 +55,29 @@ check_multiboot:
 ; Prints `ERR: ` and the given error code to screen and hangs.
 ; parameter: error code (in ascii) in al
 error:
-    mov dword [0xb8000], 0x4f524f45
-    mov dword [0xb8004], 0x4f3a4f52
-    mov dword [0xb8008], 0x4f204f20
-    mov byte  [0xb800a], al
+    mov dword [VGA_BUFFER], 0x4f524f45
+    mov dword [VGA_BUFFER+0x04], 0x4f3a4f52
+    mov dword [VGA_BUFFER+0x08], 0x4f204f20
+    mov byte  [VGA_BUFFER+0x0a], al
     hlt
+
+vga_clear_buffer:
+    
+; Print a string to the VGA Buffer.
+vga_print_string:
+    mov ecx, VGA_BUFFER
+    ; Memory location of string is assumed to be in ebx
+    mov ah, 0x2f
+loop:
+    mov al, [ebx]
+    cmp al, 0x00     ; Check whether we are at the null terminator.
+    je done
+    mov [ecx], ax
+    add ecx, 2
+    inc ebx
+    jmp loop
+done:
+    ret
 
 section .bss
 align 4096
