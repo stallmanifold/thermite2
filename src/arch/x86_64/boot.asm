@@ -4,9 +4,9 @@ section .text
 bits 32
 start:
     call check_protected_mode
-    cmp eax, 0x01
+    cmp eax, 0x00
     je .ok
-    cmp eax, 0x02
+    cmp eax, 0x01
     je .not_ok
     jmp .error
 .ok:
@@ -28,9 +28,9 @@ check_protected_mode:
     and eax, 0x01
     cmp eax, 0x01
     jne .not_protected_mode
-    mov eax, 0x01
+    mov eax, 0x00
     ; pop eax
     ret
 .not_protected_mode:
-    mov eax, 0x02
+    mov eax, 0x01
     ret
