@@ -14,6 +14,10 @@ bits 32
 start:
     mov esp, stack_top
     call check_protected_mode
+    hlt
+
+check_protected_mode:
+    call cpu_in_protected_mode
     cmp eax, TRUE
     je .ok
     cmp eax, FALSE
@@ -21,19 +25,19 @@ start:
     jmp .error
 .ok:
     mov ebx, str_ok
-    call vga_print_string
-    hlt
+    jmp .done
 .not_ok:
     mov ebx, str_not_ok
-    call vga_print_string
-    hlt
+    jmp .done
 .error:
     mov ebx, str_err
+    jmp .done
+.done:
     call vga_print_string
-    hlt
+    ret
 
 ; Detect that the intel CPU is in protected mode. 
-check_protected_mode:
+cpu_in_protected_mode:
     mov eax, cr0
     and eax, 0x01            ;
     cmp eax, 0x01            ; Check That the PE mode flag is set in CR0.
@@ -68,15 +72,15 @@ vga_print_string:
     mov ecx, VGA_BUFFER
     ; Memory location of string is assumed to be in ebx
     mov ah, 0x2f
-loop:
+.loop:
     mov al, [ebx]
     cmp al, 0x00     ; Check whether we are at the null terminator.
-    je done
+    je .done
     mov [ecx], ax
     add ecx, 2
     inc ebx
-    jmp loop
-done:
+    jmp .loop
+.done:
     ret
 
 section .bss
