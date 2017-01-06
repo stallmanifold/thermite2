@@ -82,6 +82,7 @@ check_multiboot:
 check_cpuid:
     ; Check if CPUID is supported by attempting to flip the ID bit (bit 21)
     ; in the FLAGS register. If we can flip it, CPUID is available.
+    push ecx
 
     ; Copy FLAGS in to EAX via stack
     pushfd
@@ -110,14 +111,18 @@ check_cpuid:
     ; wasn't flipped, and CPUID isn't supported.
     cmp eax, ecx
     je .no_cpuid
+    pop ecx
     ret
 .no_cpuid:
+    pop ecx
     mov al, "1"
     jmp error
 
 
 check_long_mode:
     ; test if extended processor info in available
+    push edx
+
     mov eax, 0x80000000    ; implicit argument for cpuid
     cpuid                  ; get highest supported argument
     cmp eax, 0x80000001    ; it needs to be at least 0x80000001
@@ -128,9 +133,11 @@ check_long_mode:
     cpuid                  ; returns various feature bits in ecx and edx
     test edx, 1 << 29      ; test if the LM-bit is set in the D-register
     jz .no_long_mode       ; If it's not set, there is no long mode
+    pop edx
     ret
 .no_long_mode:
     mov al, "2"
+    pop edx
     jmp error
 
 
@@ -149,6 +156,8 @@ vga_clear_buffer:
 
 ; Print a string to the VGA Buffer.
 vga_print_string:
+    push ecx
+    
     mov ecx, VGA_BUFFER
     ; Memory location of string is assumed to be in ebx
     mov ah, 0x2f
@@ -161,6 +170,7 @@ vga_print_string:
     inc ebx
     jmp .loop
 .done:
+    pop ecx
     ret
 
 
