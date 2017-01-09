@@ -1,6 +1,9 @@
 [package]
-name = "thermite2"
+name = "thermite2_os"
 version = "0.1.0"
 authors = ["Stallmanifold <stallmanifold@gmail.com>"]
+
+[lib]
+crate-type = ["staticlib"]
 
 [dependencies]

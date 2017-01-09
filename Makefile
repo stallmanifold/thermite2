@@ -13,6 +13,7 @@
 ### Build configuration parameters
 #
 ARCH ?= x86_64
+TARGET ?= $(ARCH)-unknown-linux-gnu
 
 ifndef SOURCE_ROOT
 	SOURCE_ROOT=.
@@ -28,6 +29,7 @@ KERNEL := $(BUILD_ROOT)/kernel-$(ARCH).bin
 ISO := $(BUILD_ROOT)/os-$(ARCH).iso
 
 # Source code files
+OS_TARGET := target/$(TARGET)/debug/libthermite2_os.a
 LINKER_SCRIPT := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_LINKER_SCRIPT))
 GRUB_CFG := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_GRUB_CFG))
 ASM_SOURCE_FILES += $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_ASM_SOURCE_FILES))
@@ -36,7 +38,7 @@ ASM_OBJECT_FILES += $(patsubst $(ARCH_DIRECTORY)/%.asm, build/arch/$(ARCH)/%.o, 
 #
 ### Top-level targets
 # 
-.PHONY: default all build run clean
+.PHONY: default all build run clean cargo
 
 default: all
 
@@ -45,12 +47,15 @@ all: $(KERNEL)
 build: $(ISO)
 
 clean:
-	@rm -r $(BUILD_ROOT)
+	@cargo clean
+	@rm -rf $(BUILD_ROOT)
 
 
 run: $(ISO)
 	@qemu-system-x86_64 -s -cdrom $(ISO)
 
+cargo:
+	@cargo build --target $(TARGET)
 #
 ### Dry-run target.
 #
@@ -81,9 +86,8 @@ $(ISO): $(KERNEL) $(GRUB_CFG)
 	@grub-mkrescue -o $(ISO) build/isofiles 2> /dev/null
 	@rm -r build/isofiles
 
-$(KERNEL): $(ASM_OBJECT_FILES) $(LINKER_SCRIPT)
-	@echo $(ASM_OBJECT_FILES)
-	@ld -n -T $(LINKER_SCRIPT) -o $(KERNEL) $(ASM_OBJECT_FILES)
+$(KERNEL): cargo $(OS_TARGET) $(ASM_OBJECT_FILES) $(LINKER_SCRIPT)
+	@ld -n -T $(LINKER_SCRIPT) -o $(KERNEL) $(ASM_OBJECT_FILES) $(OS_TARGET)
 
 build/arch/$(ARCH)/%.o: $(ARCH_DIRECTORY)/%.asm
 	@mkdir -p $(shell dirname $@)
