@@ -2,6 +2,7 @@
 #![feature(unique, const_fn)]
 #![no_std]
 extern crate rlibc;
+extern crate volatile;
 
 mod vga_buffer;
 

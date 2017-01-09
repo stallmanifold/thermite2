@@ -14,7 +14,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "volatile"
 version = "0.2.0"
-source = "git+https://github.com/stallmanifold/volatile.git#98096840ffbcce1ebe5aee8ca919277b1fa29b89"
+source = "git+https://github.com/stallmanifold/volatile.git#e8c3c5a787649404712f7f33a6f2e5def4ce8799"
 
 [metadata]
 "checksum rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc874b127765f014d792f16763a81245ab80500e2ad921ed4ee9e82481ee08fe"

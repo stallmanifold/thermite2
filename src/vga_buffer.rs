@@ -1,7 +1,11 @@
+#![allow(dead_code)]
+
+
 use core::ptr::Unique;
 use core::fmt;
+use volatile::VolatileCell;
 
-#[allow(dead_code)]
+
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum Color {
@@ -43,7 +47,7 @@ const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 
 struct Buffer {
-    chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
+    chars: [[VolatileCell<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
 pub struct Writer {
@@ -65,10 +69,10 @@ impl Writer {
                 let col = self.column_position;
 
                 let color_code = self.color_code;
-                self.buffer().chars[row][col] = ScreenChar {
+                self.buffer().chars[row][col].set(ScreenChar {
                     ascii_character: byte,
                     color_code: color_code,
-                };
+                });
                 self.column_position += 1;
             }
         }
@@ -90,8 +94,8 @@ impl Writer {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
                 let buffer = self.buffer();
-                let character = buffer.chars[row][col].read();
-                buffer.chars[row - 1][col].write(character);
+                let character = buffer.chars[row][col].get();
+                buffer.chars[row - 1][col].set(character);
             }
         }
         self.clear_row(BUFFER_HEIGHT-1);
@@ -99,14 +103,14 @@ impl Writer {
     }
 
     fn clear_row(&mut self, row: usize) {
-    let blank = ScreenChar {
-        ascii_character: b' ',
-        color_code: self.color_code,
-    };
-    
-    for col in 0..BUFFER_WIDTH {
-        self.buffer().chars[row][col].write(blank);
-    }
+        let blank = ScreenChar {
+            ascii_character: b' ',
+            color_code: self.color_code,
+        };
+
+        for col in 0..BUFFER_WIDTH {
+            self.buffer().chars[row][col].set(blank);
+        }
 }
 
 }
