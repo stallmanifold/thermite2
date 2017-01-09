@@ -6,7 +6,7 @@
 %define MULTIBOOT_MAGIC 0x36d76289 
 
 
-global start
+global _start
 
 section .data
 str_in_pmode:     db "In Protected Mode.", 0
@@ -17,7 +17,7 @@ str_ok:           db "OK", 0
 
 section .text
 bits 32
-start:
+_start:
     mov esp, stack_top
 
     push eax
@@ -28,10 +28,14 @@ start:
     call check_cpuid
     call check_long_mode
 
+    call initialize_page_tables
+    call enable_paging
+
     ; Print `OK` to screen.
     mov ebx, str_ok
     call vga_print_string
     hlt
+
 
 check_protected_mode:
     push ebx
@@ -120,9 +124,8 @@ check_cpuid:
 
 
 check_long_mode:
-    ; test if extended processor info in available
     push edx
-
+    ; test if extended processor info in available
     mov eax, 0x80000000    ; implicit argument for cpuid
     cpuid                  ; get highest supported argument
     cmp eax, 0x80000001    ; it needs to be at least 0x80000001
@@ -141,6 +144,65 @@ check_long_mode:
     jmp error
 
 
+; Initial initialization of kernel memory space. We must identity map
+; the lower 4GB of the processor's address space initially before we transition to
+; 64-bit mode.
+initialize_page_tables:
+    ; Map the first PML4E entry to the PDPTE table.
+    ; This is called the P4 table in the bss section.
+    mov eax, p3_table
+    or eax, 0b11         ; Present + Writable
+    mov [p4_table], eax
+
+    ; Map the first PDPTE entry to the first PDE table.
+    ; The first PDPTE table is called P3 and the first PDE table
+    ; is called P2 in the .bss section.
+    mov eax, p2_table
+    or eax, 0b11         ; Present + Writable
+    mov [p3_table], eax
+
+    ; Map each P2 entry to a huge 2MiB page.
+    mov ecx, 0           ; counter variable
+
+.map_p2_table:
+    ; For each P2 entry (indexed by ecx), map that entry to a 2MiB page 
+    ; starting at address 2MiB * [ecx].
+    mov eax, 0x200000             ; 2MiB
+    mul ecx                       ; Starting address of page number [ecx]
+    or eax, 0b10000011            ; Present + Writable + PS
+    mov [p2_table + ecx * 8], eax ; Map page entry [ecx]
+    inc ecx            
+    cmp ecx, 512                  ; If counter == 512, the whole P2 table is mapped
+    jne .map_p2_table        
+
+    ret
+
+
+enable_paging:
+    ; Load P4 table address to CR3 register. The CR3 register is used to access
+    ; the page tables.
+    mov eax, p4_table
+    mov cr3, eax
+
+    ; Enable the PAE flag in register CR4 (Physical Address Extension)
+    mov eax, cr4
+    or eax, 1 << 5
+    mov cr4, eax
+
+    ; Set the long mode bit in the EFER MSR (model specific register)
+    mov ecx, 0xC0000080
+    rdmsr
+    or eax, 1 << 8
+    wrmsr
+
+    ; Enable paging in the CR0 register
+    mov eax, cr0
+    or eax, 1 << 31
+    mov cr0, eax
+
+    ret
+
+
 ; Prints `ERR: ` and the given error code to screen and hangs.
 ; parameter: error code (in ascii) in al
 error:
@@ -149,15 +211,12 @@ error:
     mov dword [VGA_BUFFER+0x08], 0x4f204f20
     mov byte  [VGA_BUFFER+0x0a], al
     hlt
-
-
-vga_clear_buffer:
     
 
 ; Print a string to the VGA Buffer.
 vga_print_string:
     push ecx
-    
+
     mov ecx, VGA_BUFFER
     ; Memory location of string is assumed to be in ebx
     mov ah, 0x2f
@@ -176,6 +235,12 @@ vga_print_string:
 
 section .bss
 align 4096
+p4_table:
+    resb 4096
+p3_table:
+    resb 4096
+p2_table:
+    resb 4096
 stack_bottom:
     resb 64
 stack_top:
