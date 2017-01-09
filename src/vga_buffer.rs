@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-
-
 use core::ptr::Unique;
 use core::fmt;
 use volatile::VolatileCell;
 
+const VGA_BUFFER_HEIGHT: usize = 25;
+const VGA_BUFFER_WIDTH: usize = 80;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -31,6 +31,7 @@ pub enum Color {
 struct ColorCode(u8);
 
 impl ColorCode {
+    #[inline]
     const fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode((background as u8) << 4 | (foreground as u8))
     }
@@ -43,11 +44,8 @@ struct ScreenChar {
     color_code: ColorCode,
 }
 
-const BUFFER_HEIGHT: usize = 25;
-const BUFFER_WIDTH: usize = 80;
-
 struct Buffer {
-    chars: [[VolatileCell<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
+    chars: [[VolatileCell<ScreenChar>; VGA_BUFFER_WIDTH]; VGA_BUFFER_HEIGHT],
 }
 
 pub struct Writer {
@@ -61,11 +59,11 @@ impl Writer {
         match byte {
             b'\n' => self.new_line(),
             byte => {
-                if self.column_position >= BUFFER_WIDTH {
+                if self.column_position >= VGA_BUFFER_WIDTH {
                     self.new_line();
                 }
 
-                let row = BUFFER_HEIGHT - 1;
+                let row = VGA_BUFFER_HEIGHT - 1;
                 let col = self.column_position;
 
                 let color_code = self.color_code;
@@ -78,12 +76,6 @@ impl Writer {
         }
     }
 
-    pub fn write_str(&mut self, s: &str) {
-        for byte in s.bytes() {
-            self.write_byte(byte)
-        }
-    }
-
     fn buffer(&mut self) -> &mut Buffer {
         unsafe { 
             self.buffer.get_mut() 
@@ -91,14 +83,14 @@ impl Writer {
     }
 
     fn new_line(&mut self) {
-        for row in 1..BUFFER_HEIGHT {
-            for col in 0..BUFFER_WIDTH {
+        for row in 1..VGA_BUFFER_HEIGHT {
+            for col in 0..VGA_BUFFER_WIDTH {
                 let buffer = self.buffer();
                 let character = buffer.chars[row][col].get();
                 buffer.chars[row - 1][col].set(character);
             }
         }
-        self.clear_row(BUFFER_HEIGHT-1);
+        self.clear_row(VGA_BUFFER_HEIGHT-1);
         self.column_position = 0;
     }
 
@@ -108,10 +100,10 @@ impl Writer {
             color_code: self.color_code,
         };
 
-        for col in 0..BUFFER_WIDTH {
+        for col in 0..VGA_BUFFER_WIDTH {
             self.buffer().chars[row][col].set(blank);
         }
-}
+    }
 
 }
 
