@@ -176,7 +176,7 @@ initialize_page_tables:
     mov [p3_table], eax
 
     ; Map each P2 entry to a huge 2MiB page.
-    mov ecx, 0           ; counter variable
+    mov ecx, 0           ; Initialize counter
 
 .map_p2_table:
     ; For each P2 entry (indexed by ecx), map that entry to a 2MiB page 
