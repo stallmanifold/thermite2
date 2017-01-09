@@ -6,7 +6,7 @@
 %define MULTIBOOT_MAGIC 0x36d76289 
 
 
-global start
+global _start
 extern long_mode_start
 
 section .data
@@ -18,7 +18,7 @@ str_ok:           db "OK", 0
 
 section .text
 bits 32
-start:
+_start:
     mov esp, stack_top
 
     push eax
@@ -251,9 +251,9 @@ section .rodata
 gdt64:
     dq 0 ; Zero entry
 .code_seg: equ $ - gdt64
-    dq (1<<44) | (1<<47) | (1<<41) | (1<<43) | (1<<53) ; code segment
+    dq (1<<44) | (1<<47) | (1<<41) | (1<<43) | (1<<53) ; Code segment
 .data_seg: equ $ - gdt64
-    dq (1<<44) | (1<<47) | (1<<41) ; Data segment    
+    dq (1<<44) | (1<<47) | (1<<41) ; Data segment
 .pointer:
     dw $ - gdt64 - 1
     dq gdt64
