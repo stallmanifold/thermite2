@@ -14,7 +14,8 @@ ARCH_DIRECTORY        := src/arch/$(ARCH)
 ARCH_LINKER_SCRIPT    += linker.ld
 
 ARCH_ASM_SOURCE_FILES += multiboot_header.asm \
-			 boot.asm
+			             boot.asm \
+			             long_mode_init.asm
 
 ARCH_BOOTLOADER_CONFIG_DIR += boot
 

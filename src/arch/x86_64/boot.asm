@@ -6,7 +6,8 @@
 %define MULTIBOOT_MAGIC 0x36d76289 
 
 
-global _start
+global start
+extern long_mode_start
 
 section .data
 str_in_pmode:     db "In Protected Mode.", 0
@@ -17,7 +18,7 @@ str_ok:           db "OK", 0
 
 section .text
 bits 32
-_start:
+start:
     mov esp, stack_top
 
     push eax
@@ -31,7 +32,18 @@ _start:
     call initialize_page_tables
     call enable_paging
 
-    ; Print `OK` to screen.
+    ; Load the 64-bit global descriptor table
+    lgdt [gdt64.pointer]
+
+    ; Update selectors
+    mov ax, gdt64.data_seg
+    mov ss, ax   ; Stack Selector
+    mov ds, ax   ; Data Selector
+    mov es, ax   ; Extra Selector
+
+    jmp gdt64.code_seg:long_mode_start
+
+    ; Print `OK` to screen
     mov ebx, str_ok
     call vga_print_string
     hlt
@@ -39,7 +51,7 @@ _start:
 
 check_protected_mode:
     push ebx
-    call cpu_in_protected_mode
+    call detect_protected_mode
     cmp eax, TRUE
     je .ok
     cmp eax, FALSE
@@ -59,8 +71,9 @@ check_protected_mode:
     pop ebx
     ret
 
+
 ; Detect that the intel CPU is in protected mode. 
-cpu_in_protected_mode:
+detect_protected_mode:
     push ebx
     mov ebx, cr0
     and ebx, 0x01            ;
@@ -73,6 +86,7 @@ cpu_in_protected_mode:
 .done:
     pop ebx
     ret
+
 
 check_multiboot:
     cmp eax, MULTIBOOT_MAGIC
@@ -231,6 +245,18 @@ vga_print_string:
 .done:
     pop ecx
     ret
+
+
+section .rodata
+gdt64:
+    dq 0 ; Zero entry
+.code_seg: equ $ - gdt64
+    dq (1<<44) | (1<<47) | (1<<41) | (1<<43) | (1<<53) ; code segment
+.data_seg: equ $ - gdt64
+    dq (1<<44) | (1<<47) | (1<<41) ; Data segment    
+.pointer:
+    dw $ - gdt64 - 1
+    dq gdt64
 
 
 section .bss
