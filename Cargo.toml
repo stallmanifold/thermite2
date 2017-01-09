@@ -1,6 +1,6 @@
 [package]
-name = "thermite2_os"
-version = "0.1.0"
+name = "thermite_os"
+version = "0.1.1"
 authors = ["Stallmanifold <stallmanifold@gmail.com>"]
 
 [lib]
@@ -8,6 +8,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 rlibc = "1.0.0"
+volatile = { git = "https://github.com/stallmanifold/volatile.git" }
 
 [profile.dev]
 panic = "abort"

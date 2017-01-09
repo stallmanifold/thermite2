@@ -29,7 +29,7 @@ KERNEL := $(BUILD_ROOT)/kernel-$(ARCH).bin
 ISO := $(BUILD_ROOT)/os-$(ARCH).iso
 
 # Source code files
-OS_TARGET := target/$(TARGET)/debug/libthermite2_os.a
+OS_TARGET := target/$(TARGET)/debug/libthermite_os.a
 LINKER_SCRIPT := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_LINKER_SCRIPT))
 GRUB_CFG := $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_GRUB_CFG))
 ASM_SOURCE_FILES += $(patsubst %, $(ARCH_DIRECTORY)/%, $(ARCH_ASM_SOURCE_FILES))
@@ -56,6 +56,7 @@ run: $(ISO)
 
 cargo:
 	@cargo build --target $(TARGET)
+	
 #
 ### Dry-run target.
 #
