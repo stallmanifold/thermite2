@@ -43,6 +43,8 @@ _start:
 
     jmp gdt64.code_seg:long_mode_start
 
+    call enable_SSE
+
     ; Print `OK` to screen
     mov ebx, str_ok
     call vga_print_string
@@ -215,6 +217,29 @@ enable_paging:
     mov cr0, eax
 
     ret
+
+
+; Check for SSE and enable it. If it's not supported throw error "a".
+enable_SSE:
+    ; check for SSE
+    mov eax, 0x1
+    cpuid
+    test edx, 1<<25
+    jz .no_SSE
+
+    ; Enable SSE
+    mov eax, cr0
+    and ax, 0xFFFB      ; Clear coprocessor emulation CR0.EM
+    or ax, 0x2          ; Set coprocessor monitoring  CR0.MP
+    mov cr0, eax
+    mov eax, cr4
+    or ax, 3 << 9       ; Set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
+    mov cr4, eax
+
+    ret
+.no_SSE:
+    mov al, "a"
+    jmp error
 
 
 ; Prints `ERR: ` and the given error code to screen and hangs.

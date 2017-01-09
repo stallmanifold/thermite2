@@ -87,7 +87,7 @@ $(ISO): $(KERNEL) $(GRUB_CFG)
 	@rm -r build/isofiles
 
 $(KERNEL): cargo $(OS_TARGET) $(ASM_OBJECT_FILES) $(LINKER_SCRIPT)
-	@ld -n -T $(LINKER_SCRIPT) -o $(KERNEL) $(ASM_OBJECT_FILES) $(OS_TARGET)
+	@ld -n --gc-sections -T $(LINKER_SCRIPT) -o $(KERNEL) $(ASM_OBJECT_FILES) $(OS_TARGET)
 
 build/arch/$(ARCH)/%.o: $(ARCH_DIRECTORY)/%.asm
 	@mkdir -p $(shell dirname $@)

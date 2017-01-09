@@ -7,3 +7,10 @@ authors = ["Stallmanifold <stallmanifold@gmail.com>"]
 crate-type = ["staticlib"]
 
 [dependencies]
+rlibc = "1.0.0"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

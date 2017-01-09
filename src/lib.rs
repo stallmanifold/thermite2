@@ -1,5 +1,6 @@
 #![feature(lang_items)]
 #![no_std]
+extern crate rlibc;
 
 #[no_mangle]
 pub extern "C" fn rust_main() {}
@@ -10,3 +11,9 @@ extern fn eh_personality() {}
 #[lang = "panic_fmt"] 
 #[no_mangle] 
 pub extern fn panic_fmt() -> ! {loop{}}
+
+#[allow(non_snake_case)]
+#[no_mangle]
+pub extern "C" fn _Unwind_Resume() -> ! {
+	loop {}
+}
