@@ -5,6 +5,7 @@ extern crate rlibc;
 extern crate volatile;
 extern crate spin;
 
+#[macro_use]
 mod vga_buffer;
 
 //use core::fmt::Write;
@@ -15,9 +16,8 @@ const VGA_BUFFER_ADDRESS: usize = 0xB8000;
 
 #[no_mangle]
 pub extern "C" fn rust_main() {
-    use core::fmt::Write;
-    vga_buffer::WRITER.lock().write_str("Hello again");
-    write!(vga_buffer::WRITER.lock(), ", some numbers: {} {}", 42, 1.337);
+    vga_buffer::clear_screen();
+    println!("Hello World{}", "!");
     loop{}
 }
 
