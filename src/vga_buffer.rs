@@ -6,8 +6,8 @@ use spin::Mutex;
 
 const VGA_BUFFER_HEIGHT: usize = 25;
 const VGA_BUFFER_WIDTH: usize = 80;
-
-pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
+ 
+pub static VGA_WRITER: Mutex<Writer> = Mutex::new(Writer {
     column_position: 0,
     color_code: ColorCode::new(Color::LightGreen, Color::Black),
     buffer: unsafe { Unique::new(0xb8000 as *mut _) },
@@ -26,7 +26,7 @@ macro_rules! print {
 
 pub fn print(args: fmt::Arguments) {
     use core::fmt::Write;
-    WRITER.lock().write_fmt(args).unwrap();
+    VGA_WRITER.lock().write_fmt(args).unwrap();
 }
 
 #[derive(Debug, Clone, Copy)]
