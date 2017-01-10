@@ -1,6 +1,6 @@
 [root]
 name = "thermite_os"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spin 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
