@@ -2,9 +2,17 @@
 use core::ptr::Unique;
 use core::fmt;
 use volatile::VolatileCell;
+use spin::Mutex;
 
 const VGA_BUFFER_HEIGHT: usize = 25;
 const VGA_BUFFER_WIDTH: usize = 80;
+
+pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
+    column_position: 0,
+    color_code: ColorCode::new(Color::LightGreen, Color::Black),
+    buffer: unsafe { Unique::new(0xb8000 as *mut _) },
+});
+
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -55,6 +63,14 @@ pub struct Writer {
 }
 
 impl Writer {
+    fn new(buffer: Unique<Buffer>, foreground: Color, background: Color) -> Writer {
+        Writer {
+            column_position: 0,
+            color_code: ColorCode::new(foreground, background),
+            buffer: buffer
+        }
+    }
+
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.new_line(),
