@@ -8,10 +8,6 @@ extern crate spin;
 #[macro_use]
 mod vga_buffer;
 
-//use core::fmt::Write;
-//use core::ptr::Unique;
-
-const VGA_BUFFER_ADDRESS: usize = 0xB8000;
 // TODO: Expand the stack and add a guard page between the stack and the page tables.
 
 #[no_mangle]
