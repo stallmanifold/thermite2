@@ -13,12 +13,12 @@ pub static VGA_WRITER: Mutex<Writer> = Mutex::new(Writer {
     buffer: unsafe { Unique::new(0xb8000 as *mut _) },
 });
 
-macro_rules! println {
-    ($fmt:expr) => (print!(concat!($fmt, "\n")));
-    ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
+macro_rules! vga_println {
+    ($fmt:expr) => (vga_print!(concat!($fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*) => (vga_print!(concat!($fmt, "\n"), $($arg)*));
 }
 
-macro_rules! print {
+macro_rules! vga_print {
     ($($arg:tt)*) => ({
         $crate::vga_buffer::print(format_args!($($arg)*));
     });
@@ -149,6 +149,6 @@ impl fmt::Write for Writer {
 
 pub fn clear_screen() {
     for _ in 0..VGA_BUFFER_HEIGHT {
-        println!("");
+        vga_println!("");
     }
 }

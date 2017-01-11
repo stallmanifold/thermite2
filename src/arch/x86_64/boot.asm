@@ -254,8 +254,8 @@ error:
 
 ; Print a string to the VGA Buffer.
 vga_print_string:
-    push ecx
-
+    push ebp
+    
     mov ecx, VGA_BUFFER
     ; Memory location of string is assumed to be in ebx
     mov ah, 0x2f
@@ -268,7 +268,7 @@ vga_print_string:
     inc ebx
     jmp .loop
 .done:
-    pop ecx
+    pop ebp
     ret
 
 
@@ -293,5 +293,5 @@ p3_table:
 p2_table:
     resb 4096
 stack_bottom:
-    resb 64
+    resb 4096
 stack_top:
