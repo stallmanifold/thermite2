@@ -6,7 +6,7 @@ use spin::Mutex;
 
 
 pub static GLOBAL_VGA_WRITER: Mutex<Writer> = Mutex::new(Writer {
-    position: CursorPosition { row: 0, column: 0 },
+    current: CursorPosition { row: 0, column: 0 },
     color_code: vga::ColorCode::new(vga::Color::LightGreen, vga::Color::Black),
     buffer: unsafe { Unique::new(vga::BUFFER_ADDRESS as *mut _) },
 });
@@ -28,7 +28,7 @@ struct CursorPosition {
 }
 
 pub struct Writer {
-    position: CursorPosition,
+    current: CursorPosition,
     color_code: vga::ColorCode,
     buffer: Unique<vga::Buffer>,
 }
@@ -36,7 +36,7 @@ pub struct Writer {
 impl Writer {
     fn new(buffer: Unique<vga::Buffer>, foreground: vga::Color, background: vga::Color) -> Writer {
         Writer {
-            position: CursorPosition { row: 0, column: 0 },
+            current: CursorPosition { row: 0, column: 0 },
             color_code: vga::ColorCode::new(foreground, background),
             buffer: buffer
         }
@@ -46,17 +46,17 @@ impl Writer {
         match byte {
             b'\n' => self.new_line(),
             byte => {
-                if self.position.column >= vga::BUFFER_WIDTH {
+                if self.current.column >= vga::BUFFER_WIDTH {
                     self.new_line();
                 }
 
                 let row = vga::BUFFER_HEIGHT - 1;
-                let col = self.position.column;
+                let col = self.current.column;
 
                 let color_code = self.color_code;
                 self.buffer().chars[row][col]
                              .set(vga::ScreenChar::new(byte, color_code));
-                self.position.column += 1;
+                self.current.column += 1;
             }
         }
     }
@@ -76,7 +76,7 @@ impl Writer {
             }
         }
         self.clear_row(vga::BUFFER_HEIGHT-1);
-        self.position.column = 0;
+        self.current.column = 0;
     }
 
     fn clear_row(&mut self, row: usize) {
