@@ -6,7 +6,7 @@ use spin::Mutex;
 
 
 pub static GLOBAL_VGA_WRITER: Mutex<Writer> = Mutex::new(Writer {
-    column_position: 0,
+    position: CursorPosition { row: 0, column: 0 },
     color_code: vga::ColorCode::new(vga::Color::LightGreen, vga::Color::Black),
     buffer: unsafe { Unique::new(vga::BUFFER_ADDRESS as *mut _) },
 });
@@ -22,13 +22,13 @@ macro_rules! vga_print {
     });
 }
 
-pub fn print(args: fmt::Arguments) {
-    use core::fmt::Write;
-    GLOBAL_VGA_WRITER.lock().write_fmt(args).unwrap();
+struct CursorPosition {
+    row: usize,
+    column: usize,
 }
 
 pub struct Writer {
-    column_position: usize,
+    position: CursorPosition,
     color_code: vga::ColorCode,
     buffer: Unique<vga::Buffer>,
 }
@@ -36,7 +36,7 @@ pub struct Writer {
 impl Writer {
     fn new(buffer: Unique<vga::Buffer>, foreground: vga::Color, background: vga::Color) -> Writer {
         Writer {
-            column_position: 0,
+            position: CursorPosition { row: 0, column: 0 },
             color_code: vga::ColorCode::new(foreground, background),
             buffer: buffer
         }
@@ -46,17 +46,17 @@ impl Writer {
         match byte {
             b'\n' => self.new_line(),
             byte => {
-                if self.column_position >= vga::BUFFER_WIDTH {
+                if self.position.column >= vga::BUFFER_WIDTH {
                     self.new_line();
                 }
 
                 let row = vga::BUFFER_HEIGHT - 1;
-                let col = self.column_position;
+                let col = self.position.column;
 
                 let color_code = self.color_code;
                 self.buffer().chars[row][col]
                              .set(vga::ScreenChar::new(byte, color_code));
-                self.column_position += 1;
+                self.position.column += 1;
             }
         }
     }
@@ -76,7 +76,7 @@ impl Writer {
             }
         }
         self.clear_row(vga::BUFFER_HEIGHT-1);
-        self.column_position = 0;
+        self.position.column = 0;
     }
 
     fn clear_row(&mut self, row: usize) {
@@ -96,6 +96,12 @@ impl fmt::Write for Writer {
         }
         Ok(())
     }
+}
+
+
+pub fn print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    GLOBAL_VGA_WRITER.lock().write_fmt(args).unwrap();
 }
 
 pub fn clear_screen() {
