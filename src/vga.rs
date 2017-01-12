@@ -57,11 +57,8 @@ impl Writer {
                     self.current.row = vga::BUFFER_HEIGHT - 1;
                 }
                 
-                //let row = vga::BUFFER_HEIGHT - 1;
                 let row = self.current.row;
-                //let row = 1;
                 let col = self.current.column;
-
                 let color_code = self.color_code;
                 self.buffer().chars[row][col]
                              .set(vga::ScreenChar::new(byte, color_code));
