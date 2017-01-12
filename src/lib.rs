@@ -8,15 +8,15 @@ extern crate spin;
 pub mod arch;
 
 #[macro_use]
-mod vga_buffer;
+mod vga;
 
 // TODO: Expand the stack and add a guard page between the stack and the page tables.
 
 #[no_mangle]
 pub extern "C" fn rust_main() {
-    vga_buffer::clear_screen();
+    vga::clear_screen();
     vga_println!("Hello World{}", "!");
-    loop{}
+    loop {}
 }
 
 #[lang = "eh_personality"] 
