@@ -5,6 +5,8 @@ extern crate rlibc;
 extern crate volatile;
 extern crate spin;
 
+pub mod arch;
+
 #[macro_use]
 mod vga_buffer;
 

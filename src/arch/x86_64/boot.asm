@@ -20,6 +20,7 @@ section .text
 bits 32
 _start:
     mov esp, stack_top
+    mov edi, ebx        ; Move multiboot info pointer
 
     push eax
     call check_protected_mode
@@ -41,9 +42,9 @@ _start:
     mov ds, ax   ; Data Selector
     mov es, ax   ; Extra Selector
 
-    jmp gdt64.code_seg:long_mode_start
-
     call enable_SSE
+
+    jmp gdt64.code_seg:long_mode_start
 
     ; Print `OK` to screen
     mov ebx, str_ok
