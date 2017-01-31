@@ -32,7 +32,13 @@ extern fn eh_personality() {}
 
 #[lang = "panic_fmt"] 
 #[no_mangle] 
-pub extern fn panic_fmt() -> ! {
+pub extern fn panic_fmt(fmt: core::fmt::Arguments, 
+                        file: &'static str,
+                        line: u32) -> ! 
+{
+    vga_println!("\n\nKernel PANIC in file {} at line {}", file, line);
+    vga_println!("    {}", fmt);
+    
     loop{}
 }
 
