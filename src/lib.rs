@@ -4,6 +4,7 @@
 extern crate rlibc;
 extern crate volatile;
 extern crate spin;
+extern crate multiboot2;
 
 pub mod arch;
 
@@ -13,9 +14,16 @@ mod vga;
 // TODO: Expand the stack and add a guard page between the stack and the page tables.
 
 #[no_mangle]
-pub extern "C" fn rust_main() {
+pub extern "C" fn rust_main(multiboot_information_address: usize) {
     vga::clear_screen();
-    vga_println!("Hello World{}", "!");
+    let boot_info = unsafe { multiboot2::load(multiboot_information_address) };
+    let memory_map = boot_info.memory_map()
+                              .expect("Memory map tag required.");
+    vga_println!("Available memory areas:");
+    for region in memory_map.memory_regions() {
+        vga_println!("    start: 0x{:x}, length: 0x{:x}",
+            region.base_address(), region.length());
+    }
     loop {}
 }
 

@@ -6,7 +6,7 @@ header_start:
     ; checksum
     dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
 
-    ; The multiboot tags are optional. See section 3.1.1 of the
+    ; The additional multiboot tags are optional. See section 3.1.1 of the
     ; multiboot specification.
 
     ; end tag
