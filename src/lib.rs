@@ -28,14 +28,18 @@ pub extern "C" fn rust_main(multiboot_information_address: usize) {
     let elf_sections = boot_info.elf_sections()
                                 .expect("Elf-sections are required.");
 
-
-    
+    let string_table = elf_sections.string_table();                            
     vga_println!("Kernel sections:");
-    for section in elf_sections.elf_sections() {
-        vga_println!("    addr: 0x{:x}, size: 0x{:x}, flags: 0x{:x}",
-            section.section_start_address(), section.size(), section.flags());
+    /*
+    for (i, section) in elf_sections.elf_sections().enumerate() {
+        vga_println!("{};    type: 0x{:X}; address: 0x{:X}; size: 0x{:X}; flags: 0x{:X}",
+            i, section.section_type(), section.section_start_address(), section.size_bytes(), section.flags());
     }
-    vga_println!("entry size in bytes: {}", elf_sections.entry_size());
+    */
+    for (i, section) in elf_sections.elf_sections().enumerate() {
+        vga_println!("{}; name: {};", i, string_table.section_name(section));
+    }
+    
     loop {}
 }
 

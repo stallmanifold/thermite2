@@ -1,17 +1,17 @@
 [package]
 name = "thermite_os"
 version = "0.1.5"
-authors = ["Stallmanifold <stallmanifold@gmail.com>"]
+authors = ["LambdaXymox <lambda.xymox@gmail.com>"]
 
 [lib]
 crate-type = ["staticlib"]
 
 [dependencies]
 rlibc = "1.0.0"
-volatile = { git = "https://github.com/stallmanifold/volatile.git" }
+volatile = { git = "https://github.com/lambdaxymox/volatile.git" }
 spin = "0.4.5"
-multiboot2 = { git = "https://github.com/stallmanifold/rust-multiboot2.git" }
-# multiboot2 = { path = "../rust-multiboot2"}
+# multiboot2 = { git = "https://github.com/stallmanifold/rust-multiboot2.git" }
+multiboot2 = { path = "../rust-multiboot2"}
 
 [profile.dev]
 panic = "abort"
